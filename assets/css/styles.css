@@ -103,11 +103,18 @@ a.topbar-item:hover{color:#fff}
 .topbar-meta .ic{width:1em;height:1em}
 
 /* ---------- navbar ---------- */
+/* The frosted glass lives on ::before, NOT on .navbar itself: backdrop-filter on
+   the header would make it a containing block for position:fixed, trapping the
+   full-screen mobile menu inside the 76px header. */
 .navbar{
   position:sticky;top:0;z-index:120;height:var(--nav-h);
-  background:rgba(255,255,255,.82);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  background:transparent;
   border-bottom:1px solid rgba(220,236,233,.9);
   transition:box-shadow .3s ease
+}
+.navbar::before{
+  content:"";position:absolute;inset:0;z-index:-1;
+  background:rgba(255,255,255,.82);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)
 }
 .navbar.scrolled{box-shadow:0 12px 30px -18px rgba(4,47,54,.35)}
 .nav-inner{height:var(--nav-h);display:flex;align-items:center;justify-content:space-between;gap:18px}
@@ -132,11 +139,15 @@ a.topbar-item:hover{color:#fff}
 .nav-link.active{color:var(--teal-dark)}
 .nav-link.active::after{transform:scaleX(1)}
 
-.nav-toggle{display:none;flex-direction:column;gap:5px;padding:10px;border-radius:10px;z-index:130}
-.nav-toggle span{width:24px;height:2.6px;border-radius:3px;background:var(--teal-dark);transition:transform .3s,opacity .3s}
+/* position:relative is required for z-index to apply — the ✕ must stay visible
+   and clickable above the full-screen .nav-links overlay while the menu is open. */
+.nav-toggle{display:none;flex-direction:column;gap:5px;padding:10px;border-radius:10px;position:relative;z-index:130}
+.nav-toggle.open{z-index:131}
+.nav-toggle span{width:24px;height:2.6px;border-radius:3px;background:var(--teal-dark);transition:transform .3s,opacity .3s,background .25s}
 .nav-toggle.open span:nth-child(1){transform:translateY(7.6px) rotate(45deg)}
 .nav-toggle.open span:nth-child(2){opacity:0}
 .nav-toggle.open span:nth-child(3){transform:translateY(-7.6px) rotate(-45deg)}
+.nav-toggle.open span{background:#fff}
 
 /* ---------- hero ---------- */
 .hero{
@@ -620,13 +631,21 @@ body.no-scroll{overflow:hidden}
 }
 @media (max-width:880px){
   .topbar-hide-sm{display:none}
+}
+/* Hamburger + full-viewport menu up to 992px. .nav-links is position:fixed/inset:0
+   and .navbar no longer creates a containing block (see navbar rules above), so the
+   overlay covers the whole viewport instead of being clipped to the 76px header.
+   It sits above the header (z-index 130 > 120) so the ✕ button stays clickable. */
+@media (max-width:992px){
   .nav-toggle{display:flex}
   .nav-links{
-    position:fixed;inset:0;z-index:125;background:rgba(3,42,47,.97);backdrop-filter:blur(16px);
+    position:fixed;inset:0;z-index:130;
+    background:rgba(3,42,47,.97);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
     flex-direction:column;justify-content:center;gap:10px;padding:30px;
-    opacity:0;pointer-events:none;transition:opacity .3s ease
+    opacity:0;visibility:hidden;pointer-events:none;
+    transition:opacity .3s ease,visibility .3s ease
   }
-  .nav-links.open{opacity:1;pointer-events:auto}
+  .nav-links.open{opacity:1;visibility:visible;pointer-events:auto}
   .nav-link{color:#cfe9e6;font-size:1.25rem;padding:.7em 1.1em}
   .nav-link::after{display:none}
   .btn-nav{font-size:1rem}

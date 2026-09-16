@@ -28,20 +28,27 @@
   var toggle = document.getElementById("navToggle");
   var links = document.getElementById("navLinks");
   if (toggle && links) {
-    toggle.addEventListener("click", function () {
-      var open = links.classList.toggle("open");
+    var setMenu = function (open) {
+      links.classList.toggle("open", open);
       toggle.classList.toggle("open", open);
       toggle.setAttribute("aria-expanded", open ? "true" : "false");
       toggle.setAttribute("aria-label", open ? "Close menu" : "Open menu");
       document.body.classList.toggle("no-scroll", open);
+    };
+    toggle.addEventListener("click", function () {
+      setMenu(!links.classList.contains("open"));
     });
     links.querySelectorAll("a").forEach(function (a) {
-      a.addEventListener("click", function () {
-        links.classList.remove("open");
-        toggle.classList.remove("open");
-        toggle.setAttribute("aria-expanded", "false");
-        document.body.classList.remove("no-scroll");
-      });
+      a.addEventListener("click", function () { setMenu(false); });
+    });
+    /* Escape closes the menu (unless the lightbox is open — it handles Escape itself) */
+    document.addEventListener("keydown", function (e) {
+      if (e.key !== "Escape" && e.key !== "Esc") return;
+      if (!links.classList.contains("open")) return;
+      var lbOpen = document.getElementById("lightbox");
+      if (lbOpen && lbOpen.classList.contains("open")) return;
+      setMenu(false);
+      toggle.focus();
     });
   }
 
